@@ -31,17 +31,17 @@ def to_sql(tree, features):
     return to_sql_recurse(t.children_left, t.children_right, t.threshold, features, tree.tree_.value, 0, 0)
 
 
-def to_sql_recurse(l, r, threshold, f, value, node, depth):
+def to_sql_recurse(left, right, node_conditions, feature_names, leaf_values, node_pos, depth):
     sql = ""
-    if threshold[node] == -2:
-        sql += indent(depth) + "return " + str(value[node])
+    if node_conditions[node_pos] == -2:
+        sql += indent(depth) + "return " + str(leaf_values[node_pos])
     else:
-        sql += indent(depth) + "if ( " + f[node] + " <= " + str(threshold[node]) + " ) {"
-        if l[node] != -1:
-            sql += to_sql_recurse(l, r, threshold, f, value, l[node], depth + 1)
+        sql += indent(depth) + "if " + feature_names[node_pos] + " <= " + str(node_conditions[node_pos]) + " THEN "
+        if left[node_pos] != -1:
+            sql += to_sql_recurse(left, right, node_conditions, feature_names, leaf_values, left[node_pos], depth + 1)
         sql += indent(depth) + "} else {"
-        if r[node] != -1:
-            sql += to_sql_recurse(l, r, threshold, f, value, r[node], depth + 1)
+        if right[node_pos] != -1:
+            sql += to_sql_recurse(left, right, node_conditions, feature_names, leaf_values, right[node_pos], depth + 1)
         sql += indent(depth) + "}"
     return sql
 
@@ -52,7 +52,7 @@ def indent(depth):
 
 df = get_data()
 df2, targets = encode_col(df, "Name")
-features = list(df2.columns[:4])
+features = list(df2.columns[:3])
 dt = fit_dt(df2, features)
 sql = to_sql(dt, [features[i] for i in dt.tree_.feature])
 print(sql)
