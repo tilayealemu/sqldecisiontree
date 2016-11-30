@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import numpy as np
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 
@@ -26,23 +27,27 @@ def fit_dt(df, features):
     return dt
 
 
-def to_sql(tree, features):
+def to_sql(tree, features, targets):
     t = tree.tree_
-    return to_sql_recurse(t.children_left, t.children_right, t.threshold, features, tree.tree_.value, 0, 0)
+    return to_sql_recurse(t.children_left, t.children_right, t.threshold, features, targets, tree.tree_.value, 0, 0)
 
 
-def to_sql_recurse(left, right, node_conditions, feature_names, leaf_values, node_pos, depth):
+def to_sql_recurse(left, right, conditions, features, targets, leaves, node_pos, depth):
     sql = ""
-    if node_conditions[node_pos] == -2:
-        sql += indent(depth) + "return " + str(leaf_values[node_pos])
+    if conditions[node_pos] == -2:
+        selected_feature = targets[np.argmax(leaves[node_pos])]
+        sql += indent(depth) + "'" + selected_feature + "'"
     else:
-        sql += indent(depth) + "if " + feature_names[node_pos] + " <= " + str(node_conditions[node_pos]) + " THEN "
+        sql += indent(depth) + "CASE WHEN " + features[node_pos] + " <= " + str(
+            conditions[node_pos]) + " THEN "
         if left[node_pos] != -1:
-            sql += to_sql_recurse(left, right, node_conditions, feature_names, leaf_values, left[node_pos], depth + 1)
-        sql += indent(depth) + "} else {"
+            sql += to_sql_recurse(left, right, conditions, features, targets, leaves, left[node_pos],
+                                  depth + 1)
+        sql += indent(depth) + "ELSE"
         if right[node_pos] != -1:
-            sql += to_sql_recurse(left, right, node_conditions, feature_names, leaf_values, right[node_pos], depth + 1)
-        sql += indent(depth) + "}"
+            sql += to_sql_recurse(left, right, conditions, features, targets, leaves, right[node_pos],
+                                  depth + 1)
+        sql += indent(depth) + "END"
     return sql
 
 
@@ -54,5 +59,5 @@ df = get_data()
 df2, targets = encode_col(df, "Name")
 features = list(df2.columns[:3])
 dt = fit_dt(df2, features)
-sql = to_sql(dt, [features[i] for i in dt.tree_.feature])
+sql = to_sql(dt, [features[i] for i in dt.tree_.feature], targets)
 print(sql)
