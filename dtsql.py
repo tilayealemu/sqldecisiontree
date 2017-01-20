@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import sys
+
 import numpy as np
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
@@ -7,8 +9,8 @@ from sklearn.tree import DecisionTreeClassifier
 TARGET = "TARGET_FIELD"
 
 
-def get_data():
-    return pd.read_csv("sample/iris.csv", index_col=0)
+def get_data(filepath):
+    return pd.read_csv(filepath, index_col=0)
 
 
 def encode_col(df, col_name):
@@ -55,7 +57,8 @@ def indent(depth):
     return "\n" + " " * 2 * depth
 
 
-df = get_data()
+filepath = sys.argv[1]
+df = get_data(filepath)
 df2, targets = encode_col(df, "Name")
 features = list(df2.columns[:3])
 dt = fit_dt(df2, features)

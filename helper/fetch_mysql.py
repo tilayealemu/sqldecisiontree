@@ -3,7 +3,6 @@ import sys
 
 import MySQLdb
 
-print(sys.argv[0])
 dbServer = sys.argv[1]
 dbName = sys.argv[2]
 dbUser = sys.argv[3]
