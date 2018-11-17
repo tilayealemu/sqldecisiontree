@@ -22,8 +22,8 @@ To run dtsql locally,
 
 You can also pull the demo docker image to play with it,
 ```
-docker run ainsight/dtsql
-docker run -i -t ainsight/dtsql /bin/bash
+docker run tilayealemu/dtsql
+docker run -i -t tilayealemu/dtsql /bin/bash
 python dtsql.py sample/iris.csv
 ```
 
